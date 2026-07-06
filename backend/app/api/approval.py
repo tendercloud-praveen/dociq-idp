@@ -7,11 +7,20 @@ from app.database.database import get_db
 from app.models.documet import Document
 
 router = APIRouter(
-    prefix="/approval",
+    prefix="/documents",
     tags=["Human Verification"]
 )
 
 
+@router.get("/all")
+def get_all_documents(db: Session = Depends(get_db)):
+
+    documents = db.query(Document).all()
+
+    return {
+        "count": len(documents),
+        "documents": documents
+    }
 # ===========================
 # Get All Pending Documents
 # ===========================
@@ -29,6 +38,32 @@ def get_pending_documents(db: Session = Depends(get_db)):
         "documents": documents
     }
 
+@router.get("/approved")
+def get_approved_documents(db: Session = Depends(get_db)):
+
+    documents = (
+        db.query(Document)
+        .filter(Document.status == "Approved")
+        .all()
+    )
+
+    return {
+        "count": len(documents),
+        "documents": documents
+    }
+@router.get("/rejected")
+def get_rejected_documents(db: Session = Depends(get_db)):
+
+    documents = (
+        db.query(Document)
+        .filter(Document.status == "Rejected")
+        .all()
+    )
+
+    return {
+        "count": len(documents),
+        "documents": documents
+    }
 
 # ===========================
 # Get Single Document
@@ -109,3 +144,5 @@ def reject_document(document_id: int, db: Session = Depends(get_db)):
         "message": "Document Rejected Successfully",
         "document": document
     }
+
+ 
