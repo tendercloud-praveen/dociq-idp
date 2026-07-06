@@ -19,3 +19,5 @@ frontend/dist/
 # OS files
 .DS_Store
 Thumbs.db
+git reset HEAD~1
+git reset HEAD~1
