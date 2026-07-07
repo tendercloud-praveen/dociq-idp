@@ -21,3 +21,5 @@ frontend/dist/
 Thumbs.db
 git reset HEAD~1
 git reset HEAD~1
+backend/.env
+.env

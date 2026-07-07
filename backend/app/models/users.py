@@ -11,6 +11,7 @@ class User(Base):
     company_name = Column(String(100), nullable=False)
 
     email = Column(String(100), unique=True, nullable=False)
+  
 
     mobile_number = Column(String(20), unique=True, nullable=False)
 
