@@ -27,7 +27,7 @@ print(
 
 try:
     # Create engine
-    engine = create_engine(DATABASE_URL, echo=True)
+    engine = create_engine(DATABASE_URL, echo=False)
 
     # Test the connection
     with engine.connect():
