@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 from app.schema.login_history import LoginRequest
 from app.services.login_history import login_user
+from app.database.jwt import create_access_token
 
 router = APIRouter(
     prefix="/login",
@@ -34,14 +35,26 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail=result["message"]
         )
 
+    user = result["user"]
+
+    access_token = create_access_token(
+        {
+            "sub": str(user.id),
+            "email": user.email,
+            "role": user.role
+        }
+    )
+
     return {
         "success": True,
         "message": result["message"],
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
-            "id": result["user"].id,
-            "full_name": result["user"].full_name,
-            "email": result["user"].email,
-            "mobile_number": result["user"].mobile_number,
-            "role": result["user"].role
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "mobile_number": user.mobile_number,
+            "role": user.role
         }
     }
