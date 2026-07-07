@@ -12,6 +12,9 @@ from app.graph.state import DocumentState
 from PIL import Image
 from datetime import datetime
 import pytesseract
+from pathlib import Path
+from PIL import Image
+
 
 load_dotenv()
 
@@ -47,25 +50,34 @@ def upload_node(state: DocumentState):
 # =========================
 # OCR NODE (FIXED + SAFE)
 # =========================
-def ocr_node(state: DocumentState):
+def ocr_node(state):
     print("OCR Node")
 
-    file_path = Path(state["file_path"])
+    file_path = Path(state.get("processed_file_path", state["file_path"]))
 
     try:
         image = Image.open(file_path)
-        image = image.convert("RGB")
-        raw_text = pytesseract.image_to_string(image)
+
+        raw_text = pytesseract.image_to_string(
+            image,
+            config="--oem 3 --psm 6"
+        ).strip()
+
+        if not raw_text:
+            print("❌ OCR failed: No text extracted.")
+            state["error"] = "No text extracted."
+            return state
+
+        print("✅ OCR completed successfully.")
+        print(raw_text)
+
+
+        state["raw_text"] = raw_text
 
     except Exception as e:
-        print("OCR ERROR:", e)
-        raw_text = ""
-
-    state["raw_text"] = raw_text
-
-    print("OCR extracted length:", len(raw_text))
-    print("RAW TEXT:")
-    print(raw_text)
+        print(f"❌ OCR ERROR: {e}")
+        state["error"] = str(e)
+        state["raw_text"] = ""
 
     return state
     
@@ -73,6 +85,7 @@ def ocr_node(state: DocumentState):
 # LLM NODE (FIXED JSON SAFE)
 # =========================
 def llm_node(state: DocumentState):
+
     print("LLM Node")
 
     raw_text = state.get("raw_text", "")
@@ -222,12 +235,12 @@ Rules:
     message = HumanMessage(content=prompt)
 
     try:
-        print(prompt)
+        # print(prompt)
         response = llm.invoke([message])
 
-        print("RAW RESPONSE:")
+        # print("RAW RESPONSE FROM LLM:")
 
-        print(response.content)
+        # print(response.content)
 
         content = response.content.strip()
 
@@ -239,9 +252,11 @@ Rules:
             )
 
         data = json.loads(content)
+        print("✅ LLM processing completed.")
+        print(f"Detected document type: {data.get('document_type', 'Unknown')}")
 
     except Exception as e: 
-        print("LLM ERROR:", e)
+        print(f"❌ LLM processing failed: {e}")
 
         data = {
             "document_type": "Unknown",
@@ -273,10 +288,51 @@ Rules:
         state["status"] = "Pending" 
         state["approved_by"] = None
         state["approved_date"] = None
-    print("FINAL RESULT")
-    print(json.dumps(data, indent=4))
+    
+    # print(json.dumps(data, indent=4))
     return state
 
-    
+    from pathlib import Path
+from PIL import Image, ImageFilter, ImageOps
+
+def preprocessing_node(state):
+    print("Preprocessing Node")
+
+    file_path = Path(state["file_path"])
+
+    try:
+        image = Image.open(file_path)
+
+        # Convert to grayscale
+        image = image.convert("L")
+
+        # Resize image (2x)
+        image = image.resize(
+            (image.width * 2, image.height * 2),
+            Image.Resampling.LANCZOS
+        )
+
+        # Increase contrast
+        image = ImageOps.autocontrast(image)
+
+        # Remove small noise
+        image = image.filter(ImageFilter.MedianFilter(size=3))
+
+        # Convert to black & white
+        # image = image.point(lambda x: 255 if x > 140 else 0)
+
+        # Save processed image
+        processed_path = file_path.parent / f"processed_{file_path.name}"
+        image.save(processed_path)
+
+        state["processed_file_path"] = str(processed_path)
+
+        print("✅ Preprocessing completed.")
+
+    except Exception as e:
+        print(f"❌ Preprocessing Error: {e}")
+        state["processed_file_path"] = state["file_path"]
+
+    return state
 
     
