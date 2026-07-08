@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.sql import func
 
@@ -10,6 +10,8 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    
+    
     file_name = Column(String)
     file_path = Column(String)
 

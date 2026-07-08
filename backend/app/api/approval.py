@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.documet import Document
+from app.services.notification_service import NotificationService
 
 router = APIRouter(
     prefix="/documents",
@@ -111,6 +112,31 @@ def approve_document(document_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(document)
 
+    approved_documents = (
+        db.query(Document)
+        .filter(Document.status == "Approved")
+        .all()
+    )
+
+    rejected_documents = (
+        db.query(Document)
+        .filter(Document.status == "Rejected")
+        .all()
+    )
+
+    pending_documents = (
+        db.query(Document)
+        .filter(Document.status == "Pending")
+        .all()
+    )
+
+    NotificationService.send_human_review_summary(
+        user_email="pravalyabukkala@gmail.com",
+        approved_documents=[doc.file_name for doc in approved_documents],
+        rejected_documents=[doc.file_name for doc in rejected_documents],
+        pending_documents=[doc.file_name for doc in pending_documents]
+    )
+
     return {
         "message": "Document Approved Successfully",
         "document": document
@@ -136,9 +162,36 @@ def reject_document(document_id: int, db: Session = Depends(get_db)):
         )
 
     document.status = "Rejected"
+    document.approved_by = "Admin"
+    document.approved_date = datetime.now()
 
     db.commit()
     db.refresh(document)
+
+    approved_documents = (
+        db.query(Document)
+        .filter(Document.status == "Approved")
+        .all()
+    )
+
+    rejected_documents = (
+        db.query(Document)
+        .filter(Document.status == "Rejected")
+        .all()
+    )
+
+    pending_documents = (
+        db.query(Document)
+        .filter(Document.status == "Pending")
+        .all()
+    )
+
+    NotificationService.send_human_review_summary(
+        user_email="pravalyabukkala@gmail.com",
+        approved_documents=[doc.file_name for doc in approved_documents],
+        rejected_documents=[doc.file_name for doc in rejected_documents],
+        pending_documents=[doc.file_name for doc in pending_documents]
+    )
 
     return {
         "message": "Document Rejected Successfully",

@@ -10,6 +10,8 @@ class DocumentRepository:
 
     def save(self, state):
         document = Document(
+           
+            
             file_name=state["file_name"],
         file_path=state["file_path"],
     raw_text=state["raw_text"],

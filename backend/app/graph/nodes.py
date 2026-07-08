@@ -1,5 +1,9 @@
 import json
+import fitz
 from pathlib import Path
+
+from pdf2image import convert_from_path
+from docx import Document
 
 from dotenv import load_dotenv
 # from langchain_google_genai import ChatGoogleGenerativeAI
@@ -13,7 +17,7 @@ from PIL import Image
 from datetime import datetime
 import pytesseract
 from pathlib import Path
-from PIL import Image
+
 
 
 load_dotenv()
@@ -50,37 +54,88 @@ def upload_node(state: DocumentState):
 # =========================
 # OCR NODE (FIXED + SAFE)
 # =========================
+# =========================
+# OCR NODE
+# =========================
+
 def ocr_node(state):
     print("OCR Node")
 
     file_path = Path(state.get("processed_file_path", state["file_path"]))
+    raw_text = ""
 
     try:
-        image = Image.open(file_path)
 
-        raw_text = pytesseract.image_to_string(
-            image,
-            config="--oem 3 --psm 6"
-        ).strip()
+        # ======================
+        # PDF
+        # ======================
+        if file_path.suffix.lower() == ".pdf":
 
-        if not raw_text:
-            print("❌ OCR failed: No text extracted.")
+            print("Processing PDF...")
+
+            # First try embedded text
+            doc = fitz.open(file_path)
+
+            for page in doc:
+                raw_text += page.get_text()
+
+            doc.close()
+
+            # If no embedded text, use OCR
+            if not raw_text.strip():
+
+                print("No embedded text found. Running OCR...")
+
+                for image_path in state.get("processed_pages", []):
+
+                    image = Image.open(image_path)
+
+                    raw_text += pytesseract.image_to_string(
+                        image,
+                        lang="eng",
+                        config="--oem 3 --psm 11"
+                    )
+
+        # ======================
+        # IMAGE
+        # ======================
+        else:
+
+            print("Processing Image...")
+
+            image = Image.open(file_path)
+
+            raw_text = pytesseract.image_to_string(
+                image,
+                lang="eng",
+                config="--oem 3 --psm 11"
+            )
+
+        raw_text = raw_text.strip()
+
+        if raw_text:
+            print("✅ OCR Completed")
+            print(raw_text)
+        else:
+            print("❌ No text extracted.")
             state["error"] = "No text extracted."
-            return state
-
-        print("✅ OCR completed successfully.")
-        print(raw_text)
-
 
         state["raw_text"] = raw_text
 
     except Exception as e:
+
         print(f"❌ OCR ERROR: {e}")
-        state["error"] = str(e)
+
         state["raw_text"] = ""
+        state["error"] = str(e)
 
     return state
-    
+
+
+
+           
+
+
 # =========================
 # LLM NODE (FIXED JSON SAFE)
 # =========================
@@ -280,7 +335,7 @@ Rules:
     state["summary"] = data.get("summary", "")
     state["extracted_data"] = data.get("fields", {})
     confidence = float(state["confidence"])
-    if confidence >= 0.90:
+    if confidence >= 90:
         state["status"] = "Approved"
         state["approved_by"] = "System"
         state["approved_date"] = datetime.now()
@@ -292,7 +347,11 @@ Rules:
     # print(json.dumps(data, indent=4))
     return state
 
-    from pathlib import Path
+ 
+
+
+from pathlib import Path
+from pdf2image import convert_from_path
 from PIL import Image, ImageFilter, ImageOps
 
 def preprocessing_node(state):
@@ -301,38 +360,90 @@ def preprocessing_node(state):
     file_path = Path(state["file_path"])
 
     try:
-        image = Image.open(file_path)
 
-        # Convert to grayscale
-        image = image.convert("L")
+        # ======================
+        # PDF
+        # ======================
+        if file_path.suffix.lower() == ".pdf":
 
-        # Resize image (2x)
-        image = image.resize(
-            (image.width * 2, image.height * 2),
-            Image.Resampling.LANCZOS
-        )
+            print("Processing PDF...")
 
-        # Increase contrast
-        image = ImageOps.autocontrast(image)
+            pages = convert_from_path(file_path, dpi=300)
 
-        # Remove small noise
-        image = image.filter(ImageFilter.MedianFilter(size=3))
+            processed_pages = []
 
-        # Convert to black & white
-        # image = image.point(lambda x: 255 if x > 140 else 0)
+            for i, page in enumerate(pages):
 
-        # Save processed image
-        processed_path = file_path.parent / f"processed_{file_path.name}"
-        image.save(processed_path)
+                image = page.convert("L")
 
-        state["processed_file_path"] = str(processed_path)
+                # Resize
+                image = image.resize(
+                    (image.width * 2, image.height * 2),
+                    Image.Resampling.LANCZOS
+                )
 
-        print("✅ Preprocessing completed.")
+                # Improve contrast
+                image = ImageOps.autocontrast(image)
+
+                # Remove noise
+                image = image.filter(
+                    ImageFilter.MedianFilter(size=3)
+                )
+
+                processed_path = (
+                    file_path.parent /
+                    f"processed_page_{i+1}.png"
+                )
+
+                image.save(processed_path)
+
+                processed_pages.append(str(processed_path))
+
+            # Store processed pages
+            state["processed_pages"] = processed_pages
+
+            # Keep original PDF path
+            state["processed_file_path"] = str(file_path)
+
+            print("✅ PDF preprocessing completed.")
+
+        # ======================
+        # IMAGE
+        # ======================
+        else:
+
+            print("Processing Image...")
+
+            image = Image.open(file_path)
+
+            image = image.convert("L")
+
+            image = image.resize(
+                (image.width * 2, image.height * 2),
+                Image.Resampling.LANCZOS
+            )
+
+            image = ImageOps.autocontrast(image)
+
+            image = image.filter(
+                ImageFilter.MedianFilter(size=3)
+            )
+
+            processed_path = (
+                file_path.parent /
+                f"processed_{file_path.name}"
+            )
+
+            image.save(processed_path)
+
+            state["processed_file_path"] = str(processed_path)
+
+            print("✅ Image preprocessing completed.")
 
     except Exception as e:
+
         print(f"❌ Preprocessing Error: {e}")
-        state["processed_file_path"] = state["file_path"]
+
+        state["processed_file_path"] = str(file_path)
 
     return state
-
-    
