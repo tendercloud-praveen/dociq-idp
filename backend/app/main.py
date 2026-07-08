@@ -8,6 +8,8 @@ from app.api.approval import router as approval_router
 from app.api.update import router as update_router
 from app.api.users import router as user_router
 from app.api.login import router as login_router
+from app.api.email_test import router as email_router
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,7 +30,7 @@ app.include_router(approval_router)
 app.include_router(update_router)
 app.include_router(user_router)
 app.include_router(login_router)
-
+app.include_router(email_router)
 
 @app.get("/")
 async def root():
