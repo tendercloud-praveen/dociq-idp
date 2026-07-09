@@ -20,7 +20,7 @@ def get_logged_in_user(
 ):
     return current_user
 
-@router.get("/all")
+@router.get("/total")
 def get_all_documents(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -42,7 +42,7 @@ def get_all_documents(
 # Get All Pending Documents
 # ===========================
 
-@router.get("/pending")
+@router.get("/total/pending")
 def get_pending_documents(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -62,6 +62,47 @@ def get_pending_documents(
         "count": len(documents),
         "documents": documents
     }
+@router.get("/total/rejected")
+def get_rejected_documents(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["id"])
+
+    documents = (
+        db.query(Document)
+        .filter(
+            Document.status == "Rejected",
+            Document.user_id == user_id
+        )
+        .all()
+    )
+
+    return {
+        "count": len(documents),
+        "documents": documents
+    }
+@router.get("/total/approved")
+def get_approved_documents(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["id"])
+
+    documents = (
+        db.query(Document)
+        .filter(
+            Document.status == "Approved",
+            Document.user_id == user_id
+        )
+        .all()
+    )
+
+    return {
+        "count": len(documents),
+        "documents": documents
+    }
+
 
 @router.put("/approve/{document_id}")
 def approve_document(
