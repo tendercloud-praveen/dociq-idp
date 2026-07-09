@@ -8,12 +8,11 @@ class DocumentRepository:
     def __init__(self, db):
         self.db = db
 
-    def save(self, state):
+    def save(self, state, user_id):
         document = Document(
-           
-            
-            file_name=state["file_name"],
-        file_path=state["file_path"],
+    user_id=user_id,
+    file_name=state["file_name"],
+    file_path=state["file_path"],
     raw_text=state["raw_text"],
     document_type=state["document_type"],
     confidence=state["confidence"],
@@ -22,7 +21,8 @@ class DocumentRepository:
     status=state["status"],
     approved_by=state["approved_by"],
     approved_date=state["approved_date"]
-        )
+)
+       
 
         self.db.add(document)
         self.db.commit()

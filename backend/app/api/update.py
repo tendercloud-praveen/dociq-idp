@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.models.documet import Document
 from app.schema.updates import UpdateDocumentRequest
+from app.database.jwt import get_current_user
 
 router = APIRouter(
     prefix="/approval",
@@ -12,9 +13,9 @@ router = APIRouter(
 
 
 @router.put("/update/{document_id}")
-def update_document(
+def reject_document(
     document_id: int,
-    request: UpdateDocumentRequest,
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     document = (
