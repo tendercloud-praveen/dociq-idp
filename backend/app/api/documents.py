@@ -46,6 +46,7 @@ async def upload_document(
         result = graph.invoke({
             "file_name": file.filename,
             "file_path": str(file_path)
+           
         })
 
         saved_doc = repo.save(

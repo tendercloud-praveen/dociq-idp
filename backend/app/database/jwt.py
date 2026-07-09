@@ -46,9 +46,9 @@ def get_current_user(
 
         token = credentials.credentials
 
-        print("\n========== JWT DEBUG ==========")
-        print("Received Token:")
-        print(token)
+        # print("\n========== JWT DEBUG ==========")
+        # print("Received Token:")
+        # print(token)
 
         payload = jwt.decode(
             token,
@@ -56,9 +56,9 @@ def get_current_user(
             algorithms=[ALGORITHM]
         )
 
-        print("\nDecoded Payload:")
-        print(payload)
-        print("===============================\n")
+        # print("\nDecoded Payload:")
+        # print(payload)
+        # print("===============================\n")
 
         return {
             "id": payload.get("sub"),
@@ -68,9 +68,9 @@ def get_current_user(
 
     except JWTError as e:
 
-        print("\n========== JWT ERROR ==========")
-        print(e)
-        print("===============================\n")
+        # print("\n========== JWT ERROR ==========")
+        # print(e)
+        # print("===============================\n")
 
         raise HTTPException(
             status_code=401,
