@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.sql import func
 
 from app.database.database import Base
+from sqlalchemy.orm import relationship
 
 
 class Document(Base):
@@ -10,8 +11,8 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    
-    
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
     file_name = Column(String)
     file_path = Column(String)
 
@@ -23,12 +24,9 @@ class Document(Base):
     summary = Column(Text)
     extracted_data = Column(JSON)
 
-    # Pending / Approved / Rejected
     status = Column(String, default="Pending")
 
-    # System / Human
     approved_by = Column(String, nullable=True)
-
     approved_date = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, server_default=func.now())
@@ -38,3 +36,5 @@ class Document(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+
+    user = relationship("User", back_populates="documents")

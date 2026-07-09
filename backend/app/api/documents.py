@@ -34,6 +34,8 @@ async def upload_document(
     summary = {}
     documents = {}
 
+    user_id = int(current_user["id"])
+
     for file in files:
 
         file_path = UPLOAD_DIR / file.filename
@@ -46,7 +48,10 @@ async def upload_document(
             "file_path": str(file_path)
         })
 
-        saved_doc = repo.save(result)
+        saved_doc = repo.save(
+            result,
+            user_id
+        )
 
         if result["status"] == "Approved":
             approved_documents.append(file.filename)

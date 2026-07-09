@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -21,7 +21,11 @@ def get_db():
 
 
 @router.post("/")
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    request: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db)
+):
 
     result = login_user(
         db,
@@ -43,6 +47,19 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "role": user.role
         }
+    )
+
+    # ==========================
+    # Store JWT in Cookie
+    # ==========================
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,      # Change to True in Production (HTTPS)
+        samesite="lax",
+        max_age=60 * 60,
+        expires=60 * 60
     )
 
     return {

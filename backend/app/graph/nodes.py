@@ -17,6 +17,9 @@ from PIL import Image
 from datetime import datetime
 import pytesseract
 from pathlib import Path
+from pdf2image import convert_from_path
+from PIL import Image, ImageFilter, ImageOps
+
 
 
 
@@ -49,6 +52,8 @@ llm = ChatGroq(
 def upload_node(state: DocumentState):
     print("Uploaded File:", state["file_path"])
     return state
+    
+   
 
 
 # =========================
@@ -194,7 +199,6 @@ experience
 PAN Card:
 pan_number
 name
-father_name
 date_of_birth
 
 Aadhaar Card:
@@ -335,7 +339,7 @@ Rules:
     state["summary"] = data.get("summary", "")
     state["extracted_data"] = data.get("fields", {})
     confidence = float(state["confidence"])
-    if confidence >= 90:
+    if confidence >= 90 or confidence >= 0.9:
         state["status"] = "Approved"
         state["approved_by"] = "System"
         state["approved_date"] = datetime.now()
@@ -350,100 +354,133 @@ Rules:
  
 
 
-from pathlib import Path
-from pdf2image import convert_from_path
-from PIL import Image, ImageFilter, ImageOps
+
+
+def preprocess_image(image):
+    """
+    Common preprocessing for all images.
+    """
+
+    image = image.convert("L")
+
+    image = image.resize(
+        (image.width * 2, image.height * 2),
+        Image.Resampling.LANCZOS
+    )
+
+    image = ImageOps.autocontrast(image)
+
+    image = image.filter(ImageFilter.MedianFilter(size=3))
+
+    return image
+
+
+
+
+
+def preprocess_image(image):
+    """
+    Common preprocessing for all images.
+    """
+
+    # Convert to grayscale
+    image = image.convert("L")
+
+    # Resize
+    image = image.resize(
+        (image.width * 2, image.height * 2),
+        Image.Resampling.LANCZOS
+    )
+
+    # Improve contrast
+    image = ImageOps.autocontrast(image)
+
+    # Remove noise
+    image = image.filter(
+        ImageFilter.MedianFilter(size=3)
+    )
+
+    return image
+
 
 def preprocessing_node(state):
-    print("Preprocessing Node")
+
+    print("========== PREPROCESSING NODE ==========")
 
     file_path = Path(state["file_path"])
+    suffix = file_path.suffix.lower()
 
     try:
 
-        # ======================
-        # PDF
-        # ======================
-        if file_path.suffix.lower() == ".pdf":
+        processed_images = []
 
-            print("Processing PDF...")
+        # ====================================
+        # PDF
+        # ====================================
+        if suffix == ".pdf":
+
+            print("PDF detected.")
 
             pages = convert_from_path(file_path, dpi=300)
 
-            processed_pages = []
+            for index, page in enumerate(pages):
 
-            for i, page in enumerate(pages):
+                image = preprocess_image(page)
 
-                image = page.convert("L")
-
-                # Resize
-                image = image.resize(
-                    (image.width * 2, image.height * 2),
-                    Image.Resampling.LANCZOS
-                )
-
-                # Improve contrast
-                image = ImageOps.autocontrast(image)
-
-                # Remove noise
-                image = image.filter(
-                    ImageFilter.MedianFilter(size=3)
-                )
-
-                processed_path = (
+                save_path = (
                     file_path.parent /
-                    f"processed_page_{i+1}.png"
+                    f"processed_page_{index + 1}.png"
                 )
 
-                image.save(processed_path)
+                image.save(save_path)
 
-                processed_pages.append(str(processed_path))
+                processed_images.append(str(save_path))
 
-            # Store processed pages
-            state["processed_pages"] = processed_pages
-
-            # Keep original PDF path
-            state["processed_file_path"] = str(file_path)
-
-            print("✅ PDF preprocessing completed.")
-
-        # ======================
+        # ====================================
         # IMAGE
-        # ======================
-        else:
+        # ====================================
+        elif suffix in [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".bmp",
+            ".tiff",
+            ".webp"
+        ]:
 
-            print("Processing Image...")
+            print("Image detected.")
 
             image = Image.open(file_path)
 
-            image = image.convert("L")
+            image = preprocess_image(image)
 
-            image = image.resize(
-                (image.width * 2, image.height * 2),
-                Image.Resampling.LANCZOS
-            )
-
-            image = ImageOps.autocontrast(image)
-
-            image = image.filter(
-                ImageFilter.MedianFilter(size=3)
-            )
-
-            processed_path = (
+            save_path = (
                 file_path.parent /
-                f"processed_{file_path.name}"
+                f"processed_{file_path.stem}.png"
             )
 
-            image.save(processed_path)
+            image.save(save_path)
 
-            state["processed_file_path"] = str(processed_path)
+            processed_images.append(str(save_path))
 
-            print("✅ Image preprocessing completed.")
+        # ====================================
+        # OTHER DOCUMENTS
+        # ====================================
+        else:
+
+            print(f"{suffix} is not an image-based document.")
+            print("Skipping image preprocessing.")
+
+        state["processed_images"] = processed_images
+        state["processed_file_path"] = str(file_path)
+
+        print("Preprocessing Completed.")
 
     except Exception as e:
 
-        print(f"❌ Preprocessing Error: {e}")
+        print(f"Preprocessing Error: {e}")
 
+        state["processed_images"] = []
         state["processed_file_path"] = str(file_path)
 
     return state
