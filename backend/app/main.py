@@ -12,6 +12,9 @@ from app.api.email_test import router as email_router
 from app.api.dashboard import router as dashboard_router
 from app.api.monthly_documents import router as monthly_documents_router
 from app.api.today_documents import router as today_documents_router
+from app.models.documet import Document
+from app.models.audit_logs import AuditLog
+from app.api.audit import router as audit_router
 
 
 
@@ -39,6 +42,7 @@ app.include_router(email_router)
 app.include_router(dashboard_router)
 app.include_router(monthly_documents_router)
 app.include_router(today_documents_router)
+app.include_router(audit_router)
 
 @app.get("/")
 async def root():

@@ -4,6 +4,8 @@ from sqlalchemy.sql import func
 
 from app.database.database import Base
 from sqlalchemy.orm import relationship
+from app.models.audit_logs import AuditLog
+# from app.repository.audit_logs import AuditRepository
 
 
 class Document(Base):
@@ -38,3 +40,7 @@ class Document(Base):
     )
 
     user = relationship("User", back_populates="documents")
+    audit_logs = relationship(
+    "AuditLog",
+    back_populates="document"
+)

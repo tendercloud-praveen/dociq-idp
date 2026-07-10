@@ -9,6 +9,7 @@ from app.models.documet import Document
 from app.services.notification_service import NotificationService
 from app.database.jwt import get_current_user
 from app.models.users import User
+from app.repository.audit_logs import AuditRepository
 
 router = APIRouter(
     prefix="/documents",
@@ -129,9 +130,24 @@ def approve_document(
     document.status = "Approved"
     document.approved_by = current_user["email"]
     document.approved_date = datetime.now()
+    
 
     db.commit()
     db.refresh(document)
+    AuditRepository.create_log(
+    db=db,
+    document_id=document.id,
+    action="Rejected",
+    performed_by=current_user["email"]
+)
+
+    AuditRepository.create_log(
+    db=db,
+    document_id=document.id,
+    action="Processing Completed",
+    performed_by=current_user["email"]
+)
+
 
     return {
         "message": "Document Approved Successfully",
@@ -165,6 +181,19 @@ def reject_document(
 
     db.commit()
     db.refresh(document)
+    AuditRepository.create_log(
+    db=db,
+    document_id=document.id,
+    action="Rejected",
+    performed_by=current_user["email"]
+)
+
+    AuditRepository.create_log(
+    db=db,
+    document_id=document.id,
+    action="Processing Completed",
+    performed_by=current_user["email"]
+)
 
     return {
         "message": "Document Rejected Successfully",
