@@ -40,6 +40,7 @@ def reject_document(
 
     db.commit()
     db.refresh(document)
+    
 
     return {
         "message": "Document updated successfully",

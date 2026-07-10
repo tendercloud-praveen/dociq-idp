@@ -121,6 +121,7 @@ def ocr_node(state):
         if raw_text:
             print("✅ OCR Completed")
             print(raw_text)
+         
         else:
             print("❌ No text extracted.")
             state["error"] = "No text extracted."

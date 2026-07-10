@@ -9,6 +9,7 @@ from app.database.database import get_db
 from app.database.jwt import get_current_user
 from app.repository.document_repository import DocumentRepository
 from app.services.notification_service import NotificationService
+from app.repository.audit_logs import AuditRepository
 
 router = APIRouter(
     prefix="/documents",
@@ -38,27 +39,93 @@ async def upload_document(
 
     for file in files:
 
+        # Save uploaded file
         file_path = UPLOAD_DIR / file.filename
 
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
+        # Run LangGraph
         result = graph.invoke({
             "file_name": file.filename,
             "file_path": str(file_path)
-           
         })
 
+        # Save document
         saved_doc = repo.save(
             result,
             user_id
         )
 
+        # ==========================
+        # Audit Logs
+        # ==========================
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="Document Uploaded",
+            performed_by=current_user["email"]
+        )
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="Preprocessing Completed",
+            performed_by="AI"
+        )
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="OCR Completed",
+            performed_by="AI"
+        )
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="Document Classified",
+            performed_by="LLM"
+        )
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="Data Extracted",
+            performed_by="LLM"
+        )
+
+        AuditRepository.create_log(
+            db=db,
+            document_id=saved_doc.id,
+            action="Validation Completed",
+            performed_by="AI"
+        )
+
         if result["status"] == "Approved":
+
+            AuditRepository.create_log(
+                db=db,
+                document_id=saved_doc.id,
+                action="Approved",
+                performed_by="System"
+            )
+
             approved_documents.append(file.filename)
+
         else:
+
+            AuditRepository.create_log(
+                db=db,
+                document_id=saved_doc.id,
+                action="Pending Review",
+                performed_by="System"
+            )
+
             pending_documents.append(file.filename)
 
+        # Summary
         document_type = result.get("document_type", "Unknown")
 
         summary[document_type] = summary.get(document_type, 0) + 1
