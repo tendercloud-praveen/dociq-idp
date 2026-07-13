@@ -311,6 +311,15 @@ Rules:
             )
 
         data = json.loads(content)
+        confidence = float(data.get("confidence", 0))
+        if 0 <= confidence <= 1:
+             confidence = confidence * 100
+        if confidence > 100:
+             confidence = 100
+        data["confidence"] = confidence
+   
+   
+
         print("✅ LLM processing completed.")
         print(f"Detected document type: {data.get('document_type', 'Unknown')}")
 
@@ -324,6 +333,7 @@ Rules:
             "fields": {}
         }
     
+  
 
     # state["document_type"] = data.get("document_type", "Unknown")
     # state["confidence"] = data.get("confidence", 0)
