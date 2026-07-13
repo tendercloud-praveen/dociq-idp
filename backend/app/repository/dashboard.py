@@ -10,20 +10,42 @@ class DashboardRepository:
     def __init__(self, db):
         self.db = db
 
-    def calculate_metrics(self, total, approved, pending):
+    def calculate_metrics(self, total, approved, pending, rejected, user_id):
+
+        processed = approved + rejected
 
         stp_rate = round((approved / total) * 100, 2) if total else 0
+        exception_rate = round((rejected / total) * 100, 2) if total else 0
 
-        exception_rate = round((pending / total) * 100, 2) if total else 0
+        # Fetch user's documents
+        documents = self.db.query(Document).filter(
+            Document.user_id == user_id
+        ).all()
 
-        # Replace these with actual calculations later
-        avg_processing_time = "2.5 min"
-        cost_savings = f"₹{approved * 200}"
+        # Average Processing Time
+        processing_times = []
+
+        for doc in documents:
+            if doc.created_at and doc.updated_at:
+                processing_time = (
+                    doc.updated_at - doc.created_at
+                ).total_seconds()
+                processing_times.append(processing_time)
+
+        if processing_times:
+            avg_seconds = sum(processing_times) / len(processing_times)
+            average_processing_time = f"{avg_seconds / 60:.2f} min"
+        else:
+            average_processing_time = "0 min"
+
+        # Cost Savings
+        manual_cost_per_document = 25
+        cost_savings = f"₹{processed * manual_cost_per_document}"
 
         return {
             "stp_rate": f"{stp_rate}%",
             "exception_rate": f"{exception_rate}%",
-            "average_processing_time": avg_processing_time,
+            "average_processing_time": average_processing_time,
             "cost_savings": cost_savings
         }
 
@@ -114,25 +136,30 @@ class DashboardRepository:
         overall_metrics = self.calculate_metrics(
             total,
             approved,
-            pending
+            pending,
+            rejected,
+            user_id
         )
 
         today_metrics = self.calculate_metrics(
             today_total,
             today_approved,
-            today_pending
+            today_pending,
+            today_rejected,
+            user_id
         )
 
         monthly_metrics = self.calculate_metrics(
             monthly_total,
             monthly_approved,
-            monthly_pending
+            monthly_pending,
+            monthly_rejected,
+            user_id
         )
 
         # ================= Response =================
 
         return {
-
             "overall": {
                 "total": total,
                 "approved": approved,
@@ -140,7 +167,6 @@ class DashboardRepository:
                 "rejected": rejected,
                 **overall_metrics
             },
-
             "today": {
                 "total": today_total,
                 "approved": today_approved,
@@ -148,7 +174,6 @@ class DashboardRepository:
                 "rejected": today_rejected,
                 **today_metrics
             },
-
             "monthly": {
                 "total": monthly_total,
                 "approved": monthly_approved,
@@ -156,5 +181,4 @@ class DashboardRepository:
                 "rejected": monthly_rejected,
                 **monthly_metrics
             }
-
         }
