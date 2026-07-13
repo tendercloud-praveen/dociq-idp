@@ -16,7 +16,7 @@ from app.models.documet import Document
 from app.models.audit_logs import AuditLog
 from app.api.audit import router as audit_router
 from app.api.reports import router as report_router
-
+from app.api.forgot_password import router as forgot_password_router
 
 
 
@@ -47,7 +47,7 @@ app.include_router(monthly_documents_router)
 app.include_router(today_documents_router)
 app.include_router(audit_router)
 app.include_router(report_router)
-
+app.include_router(forgot_password_router)
 @app.get("/")
 async def root():
     return {

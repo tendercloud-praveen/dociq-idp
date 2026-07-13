@@ -8,8 +8,9 @@ from app.graph.workflow import graph
 from app.database.database import get_db
 from app.database.jwt import get_current_user
 from app.repository.document_repository import DocumentRepository
-from app.services.notification_service import NotificationService
 from app.repository.audit_logs import AuditRepository
+from app.repository.users import get_user_by_email
+from app.services.notification_service import NotificationService
 
 router = APIRouter(
     prefix="/documents",
@@ -52,10 +53,7 @@ async def upload_document(
         })
 
         # Save document
-        saved_doc = repo.save(
-            result,
-            user_id
-        )
+        saved_doc = repo.save(result, user_id)
 
         # ==========================
         # Audit Logs
@@ -141,8 +139,16 @@ async def upload_document(
             "fields": result.get("extracted_data")
         })
 
+    # Get logged-in user details
+    user = get_user_by_email(
+        db=db,
+        email=current_user["email"]
+    )
+
+    # Send AI processing summary email
     NotificationService.send_ai_processing_summary(
-        user_email=current_user["email"],
+        user_name=user.full_name,
+        user_email=user.email,
         approved_documents=approved_documents,
         pending_documents=pending_documents
     )

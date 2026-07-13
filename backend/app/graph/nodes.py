@@ -91,8 +91,7 @@ def ocr_node(state):
 
                 print("No embedded text found. Running OCR...")
 
-                for image_path in state.get("processed_pages", []):
-
+                for image_path in state.get("processed_images", []):
                     image = Image.open(image_path)
 
                     raw_text += pytesseract.image_to_string(
@@ -422,8 +421,11 @@ def preprocessing_node(state):
 
             print("PDF detected.")
 
-            pages = convert_from_path(file_path, dpi=300)
-
+            pages = convert_from_path(
+    str(file_path),
+    dpi=300,
+    poppler_path=r"C:\Users\AKHILA\Downloads\poppler-26.02.0\Library\bin"
+)
             for index, page in enumerate(pages):
 
                 image = preprocess_image(page)

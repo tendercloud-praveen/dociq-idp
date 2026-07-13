@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from app.database.database import Base
 from sqlalchemy.orm import relationship
 
@@ -19,5 +19,13 @@ class User(Base):
     role = Column(String(50), nullable=False)
 
     password = Column(String(255), nullable=False)
+
+    reset_token = Column(String(255), nullable=True)
+    
+    reset_token_expiry = Column(DateTime, nullable=True)
+
+    otp = Column(String(6), nullable=True)
+
+    otp_expiry = Column(DateTime, nullable=True)
 
     documents = relationship("Document", back_populates="user")

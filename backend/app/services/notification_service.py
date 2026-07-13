@@ -5,47 +5,55 @@ class NotificationService:
 
     @staticmethod
     def send_ai_processing_summary(
+        user_name: str,
         user_email: str,
         approved_documents: list,
         pending_documents: list
     ):
 
-        subject = "DocIQ - AI Processing Completed"
+        approved_count = len(approved_documents)
+        pending_count = len(pending_documents)
+        total_documents = approved_count + pending_count
+
+        subject = "DocIQ - Document Processing Status"
 
         body = f"""
-Hello,
+Dear {user_name},
 
-Your AI document processing has been completed.
+The AI processing of your uploaded documents has been completed successfully.
 
-Total Documents : {len(approved_documents) + len(pending_documents)}
+Processing Summary
+────────────────────────────────────
 
-====================================
+Total Documents: {total_documents}
 
-✅ Approved by AI ({len(approved_documents)})
+AI Approved ({approved_count})
 
 """
 
         for document in approved_documents:
-            body += f"• {document}\n"
+            body += f"✔ {document}\n"
 
         body += f"""
 
-====================================
+────────────────────────────────────
 
-⏳ Pending Human Review ({len(pending_documents)})
+Pending Human Review ({pending_count})
 
 """
 
         for document in pending_documents:
-            body += f"• {document}\n"
+            body += f"⏳ {document}\n"
 
         body += """
 
-====================================
+────────────────────────────────────
 
-You will receive another email after the human review is completed.
+The documents pending human review are awaiting manual verification. Once the review is completed, you will receive another email with the final processing status.
 
-Thank you,
+Thank you for choosing DocIQ.
+
+Regards,
 DocIQ Team
 """
 
@@ -57,6 +65,7 @@ DocIQ Team
 
     @staticmethod
     def send_human_review_summary(
+        user_name: str,
         user_email: str,
         approved_documents: list,
         rejected_documents: list,
@@ -68,51 +77,54 @@ DocIQ Team
         pending_count = len(pending_documents)
         total_documents = approved_count + rejected_count + pending_count
 
-        subject = "DocIQ - Human Review Update"
+        subject = "DocIQ - Human Review Status"
 
         body = f"""
-Hello,
+Dear {user_name},
 
-Your document review has been updated.
+The human review of your uploaded documents has been completed.
 
-Total Documents : {total_documents}
+Processing Summary
+────────────────────────────────────
 
-====================================
+Total Documents: {total_documents}
 
-✅ Approved ({approved_count})
+Approved ({approved_count})
 
 """
 
         for document in approved_documents:
-            body += f"• {document}\n"
+            body += f"✔ {document}\n"
 
         body += f"""
 
-====================================
+────────────────────────────────────
 
-❌ Rejected ({rejected_count})
+Rejected ({rejected_count})
 
 """
 
         for document in rejected_documents:
-            body += f"• {document}\n"
+            body += f"❌ {document}\n"
 
         body += f"""
 
-====================================
+────────────────────────────────────
 
-⏳ Pending Human Review ({pending_count})
+Pending Human Review ({pending_count})
 
 """
 
         for document in pending_documents:
-            body += f"• {document}\n"
+            body += f"⏳ {document}\n"
 
         body += """
 
-====================================
+────────────────────────────────────
 
-Thank you,
+Thank you for choosing DocIQ.
+
+Regards,
 DocIQ Team
 """
 
