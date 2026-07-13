@@ -44,3 +44,63 @@ class SMTPService:
 
         except Exception as e:
             print(f"Failed to send email: {e}")
+
+
+
+
+
+
+
+
+    @staticmethod
+    def send_reset_password_email(to_email: str, reset_link: str):
+        subject = "DocIQ - Password Reset"
+
+        body = f"""
+Hello,
+
+We received a request to reset your DocIQ account password.
+
+Click the link below to reset your password:
+
+{reset_link}
+
+This link will expire in 15 minutes.
+
+If you did not request a password reset, please ignore this email.
+
+Regards,
+DocIQ Team
+"""
+
+        SMTPService.send_email(
+            to_email=to_email,
+            subject=subject,
+            body=body
+        )
+
+    @staticmethod
+    def send_otp_email(to_email: str, otp: str):
+
+        subject = "DocIQ - Password Reset OTP"
+
+        body = f"""
+Hello,
+
+Your OTP for resetting your password is:
+
+{otp}
+
+This OTP is valid for 5 minutes.
+
+If you didn't request this, please ignore this email.
+
+Regards,
+DocIQ Team
+"""
+
+        SMTPService.send_email(
+            to_email=to_email,
+            subject=subject,
+            body=body
+        )
