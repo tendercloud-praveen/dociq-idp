@@ -1,26 +1,48 @@
-# Python
+# -------------------------
+# Python Backend
+# -------------------------
 backend/venv/
+backend/.env
 __pycache__/
 *.pyc
-
-# Environment variables
-backend/.env
-
-# Uploads
 backend/app/uploads/
 
-# Frontend
+# -------------------------
+# React Frontend
+# -------------------------
 frontend/node_modules/
 frontend/dist/
+frontend/.env
 
-# VS Code
+# Ignore node_modules/dist if working inside frontend folder
+node_modules/
+dist/
+
+# -------------------------
+# Environment Files
+# -------------------------
+.env
+.env.local
+.env.*
+
+# -------------------------
+# Logs
+# -------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -------------------------
+# VS Code / IDE
+# -------------------------
 .vscode/
+.idea/
 
-# OS files
+# -------------------------
+# OS Files
+# -------------------------
 .DS_Store
 Thumbs.db
-git reset HEAD~1
-git reset HEAD~1
-backend/.env
 .env
-.env.env
+node_modules/
