@@ -119,7 +119,7 @@ class ReportRepository:
                 "file_name": doc.file_name,
                 "document_type": doc.document_type,
                 "status": doc.status,
-                "confidence": f"{doc.confidence * 100:.0f}%",
+                "confidence": f"{doc.confidence:.0f}%",
                 "uploaded_time": doc.created_at,
                 "completed_time": doc.updated_at,
                 "approved_by": doc.approved_by
