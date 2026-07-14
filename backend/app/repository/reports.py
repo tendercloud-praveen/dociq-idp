@@ -64,15 +64,29 @@ class ReportRepository:
             "generated_time": datetime.now().strftime("%I:%M %p")
         }
         processing_times = []
+        avg_processing_time = "0 min"
         for doc in documents:
             if doc.updated_at and doc.created_at:
-                processing_time = (doc.updated_at - doc.created_at).total_seconds()
+                processing_time = (
+                    doc.updated_at - doc.created_at
+                ).total_seconds()
                 processing_times.append(processing_time)
             if processing_times:
                 avg_processing_time = sum(processing_times) / len(processing_times)
                 avg_processing_time = f"{avg_processing_time / 60:.2f} min"
             else:
                 avg_processing_time = "0 min"
+        cost_per_document = 100
+        cost_savings = f"₹{processed * cost_per_document}"
+
+ 
+            
+        
+   
+
+
+
+   
 
             
     
@@ -94,8 +108,8 @@ class ReportRepository:
             "pending": pending,
             "stp_rate": stp_rate,
             "exception_rate": exception_rate,
-            "average_processing_time": average_processing_time,
-            "cost_savings": "₹5000"
+            "average_processing_time":avg_processing_time ,
+            "cost_savings": f"₹{cost_savings}"
         }
 
         document_details = []

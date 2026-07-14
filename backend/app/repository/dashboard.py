@@ -10,17 +10,12 @@ class DashboardRepository:
     def __init__(self, db):
         self.db = db
 
-    def calculate_metrics(self, total, approved, pending, rejected, user_id):
+    def calculate_metrics(self, total, approved, pending, rejected, documents):
 
         processed = approved + rejected
 
         stp_rate = round((approved / total) * 100, 2) if total else 0
         exception_rate = round((rejected / total) * 100, 2) if total else 0
-
-        # Fetch user's documents
-        documents = self.db.query(Document).filter(
-            Document.user_id == user_id
-        ).all()
 
         # Average Processing Time
         processing_times = []
@@ -34,18 +29,18 @@ class DashboardRepository:
 
         if processing_times:
             avg_seconds = sum(processing_times) / len(processing_times)
-            average_processing_time = f"{avg_seconds / 60:.2f} min"
+            avg_processing_time = f"{avg_seconds / 60:.2f} min"
         else:
-            average_processing_time = "0 min"
+            avg_processing_time = "0 min"
 
         # Cost Savings
-        manual_cost_per_document = 25
-        cost_savings = f"₹{processed * manual_cost_per_document}"
+        cost_per_document = 100
+        cost_savings = f"₹{processed * cost_per_document}"
 
         return {
             "stp_rate": f"{stp_rate}%",
             "exception_rate": f"{exception_rate}%",
-            "average_processing_time": average_processing_time,
+            "average_processing_time": avg_processing_time,
             "cost_savings": cost_savings
         }
 
@@ -71,6 +66,10 @@ class DashboardRepository:
             Document.user_id == user_id,
             Document.status == "Rejected"
         ).count()
+
+        overall_documents = self.db.query(Document).filter(
+            Document.user_id == user_id
+        ).all()
 
         # ================= Today =================
 
@@ -98,6 +97,11 @@ class DashboardRepository:
             Document.status == "Rejected",
             func.date(Document.created_at) == today
         ).count()
+
+        today_documents = self.db.query(Document).filter(
+            Document.user_id == user_id,
+            func.date(Document.created_at) == today
+        ).all()
 
         # ================= Monthly =================
 
@@ -131,6 +135,12 @@ class DashboardRepository:
             func.extract("year", Document.created_at) == year
         ).count()
 
+        monthly_documents = self.db.query(Document).filter(
+            Document.user_id == user_id,
+            func.extract("month", Document.created_at) == month,
+            func.extract("year", Document.created_at) == year
+        ).all()
+
         # ================= Metrics =================
 
         overall_metrics = self.calculate_metrics(
@@ -138,7 +148,7 @@ class DashboardRepository:
             approved,
             pending,
             rejected,
-            user_id
+            overall_documents
         )
 
         today_metrics = self.calculate_metrics(
@@ -146,7 +156,7 @@ class DashboardRepository:
             today_approved,
             today_pending,
             today_rejected,
-            user_id
+            today_documents
         )
 
         monthly_metrics = self.calculate_metrics(
@@ -154,7 +164,7 @@ class DashboardRepository:
             monthly_approved,
             monthly_pending,
             monthly_rejected,
-            user_id
+            monthly_documents
         )
 
         # ================= Response =================
