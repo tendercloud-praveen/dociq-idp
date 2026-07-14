@@ -10,6 +10,7 @@ from app.services.notification_service import NotificationService
 from app.database.jwt import get_current_user
 from app.models.users import User
 from app.repository.audit_logs import AuditRepository
+from app.repository.users import get_user_by_email
 
 router = APIRouter(
     prefix="/documents",
@@ -111,6 +112,10 @@ def approve_document(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user = get_user_by_email(
+        db=db,
+        email=current_user["email"]
+    )
 
     document = (
         db.query(Document)
@@ -138,14 +143,14 @@ def approve_document(
     db=db,
     document_id=document.id,
     action="Rejected",
-    performed_by=current_user["user.full_name"]
+    performed_by=user.full_name
 )
 
     AuditRepository.create_log(
     db=db,
     document_id=document.id,
     action="Processing Completed",
-    performed_by=current_user["user.full_name"]
+    performed_by=user.full_name
 )
 
 
@@ -159,6 +164,10 @@ def reject_document(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    user = get_user_by_email(
+        db=db,
+        email=current_user["email"]
+    )
 
     document = (
         db.query(Document)
@@ -176,7 +185,7 @@ def reject_document(
         )
 
     document.status = "Rejected"
-    document.approved_by = current_user["full_name"]
+    document.approved_by = user.full_name,
     document.approved_date = datetime.now()
 
     db.commit()
@@ -185,14 +194,14 @@ def reject_document(
     db=db,
     document_id=document.id,
     action="Rejected",
-    performed_by=current_user["user.full_name"]
+    performed_by=user.full_name
 )
 
     AuditRepository.create_log(
     db=db,
     document_id=document.id,
     action="Processing Completed",
-    performed_by=current_user["user.full_name"]
+    performed_by=user.full_name
 )
 
     return {
