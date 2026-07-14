@@ -1,11 +1,11 @@
-// import Upload from "../components/upload";
+import Upload from "../components/upload";
 
-// const Home = () => {
-//   return (
-//     <div>
-//       <Upload />
-//     </div>
-//   );
-// };
+const Home = () => {
+  return (
+    <div>
+      <Upload />
+    </div>
+  );
+};
 
-// export default Home;
+export default Home;
