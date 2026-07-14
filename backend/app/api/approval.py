@@ -138,14 +138,14 @@ def approve_document(
     db=db,
     document_id=document.id,
     action="Rejected",
-    performed_by=current_user["email"]
+    performed_by=current_user["user.full_name"]
 )
 
     AuditRepository.create_log(
     db=db,
     document_id=document.id,
     action="Processing Completed",
-    performed_by=current_user["email"]
+    performed_by=current_user["user.full_name"]
 )
 
 
@@ -176,7 +176,7 @@ def reject_document(
         )
 
     document.status = "Rejected"
-    document.approved_by = current_user["email"]
+    document.approved_by = current_user["full_name"]
     document.approved_date = datetime.now()
 
     db.commit()
@@ -185,14 +185,14 @@ def reject_document(
     db=db,
     document_id=document.id,
     action="Rejected",
-    performed_by=current_user["email"]
+    performed_by=current_user["user.full_name"]
 )
 
     AuditRepository.create_log(
     db=db,
     document_id=document.id,
     action="Processing Completed",
-    performed_by=current_user["email"]
+    performed_by=current_user["user.full_name"]
 )
 
     return {

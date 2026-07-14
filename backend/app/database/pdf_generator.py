@@ -7,11 +7,12 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
 
 
 def generate_pdf(report_data, file_path, report_type="document"):
 
-    pdf = SimpleDocTemplate(file_path)
+    pdf = SimpleDocTemplate(file_path,pagesize=landscape(A4))
     styles = getSampleStyleSheet()
     elements = []
 
@@ -74,7 +75,18 @@ def generate_pdf(report_data, file_path, report_type="document"):
                 str(doc["approved_by"])
             ])
 
-        table = Table(table_data)
+        table = Table(
+    table_data,
+    colWidths=[
+        200,  # File Name
+        90,   # Document Type
+        70,   # Status
+        65,   # Confidence
+        150,  # Uploaded Time
+        150,  # Completed Time
+        85    # Approved By
+    ]
+)
 
         table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
@@ -129,7 +141,17 @@ def generate_pdf(report_data, file_path, report_type="document"):
                     str(log["action_time"])
                 ])
 
-        table = Table(table_data)
+        table = Table(
+    table_data,
+    colWidths=[
+        180,  # File Name
+        80,   # Document Type
+        70,   # Status
+        130,   # Action
+        100,  # Performed By
+        170   # Action Time
+    ]
+)
 
         table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.grey),

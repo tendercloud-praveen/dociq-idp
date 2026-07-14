@@ -54,6 +54,10 @@ async def upload_document(
 
         # Save document
         saved_doc = repo.save(result, user_id)
+        user = get_user_by_email(
+        db=db,
+        email=current_user["email"]
+    )
 
         # ==========================
         # Audit Logs
@@ -63,7 +67,7 @@ async def upload_document(
             db=db,
             document_id=saved_doc.id,
             action="Document Uploaded",
-            performed_by=current_user["email"]
+           performed_by=user.full_name
         )
 
         AuditRepository.create_log(
