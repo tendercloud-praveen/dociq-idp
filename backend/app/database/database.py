@@ -18,14 +18,13 @@ load_dotenv()
 # )
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+print("DATABASE_URL =", DATABASE_URL)
+
+if DATABASE_URL is None:
+    raise Exception("DATABASE_URL environment variable is missing!")
+
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-DATABASE_URL = DATABASE_URL.replace(
-    "postgresql://",
-    "postgresql+psycopg2://",
-    1
-)
 
 # Print the URL (without exposing the password)
 print(
