@@ -8,13 +8,23 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 load_dotenv()
 
 # Database URL
-DATABASE_URL = (
-    f"postgresql+psycopg2://"
-    f"{os.getenv('DB_USER')}:"
-    f"{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}:"
-    f"{os.getenv('DB_PORT')}/"
-    f"{os.getenv('DB_NAME')}"
+# DATABASE_URL = (
+#     f"postgresql+psycopg2://"
+#     f"{os.getenv('DB_USER')}:"
+#     f"{os.getenv('DB_PASSWORD')}@"
+#     f"{os.getenv('DB_HOST')}:"
+#     f"{os.getenv('DB_PORT')}/"
+#     f"{os.getenv('DB_NAME')}"
+# )
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+DATABASE_URL = DATABASE_URL.replace(
+    "postgresql://",
+    "postgresql+psycopg2://",
+    1
 )
 
 # Print the URL (without exposing the password)
