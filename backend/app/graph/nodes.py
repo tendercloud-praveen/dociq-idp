@@ -109,11 +109,11 @@ def ocr_node(state):
 
             image = Image.open(file_path)
 
-            # raw_text = pytesseract.image_to_string(
-            #     image,
-            #     lang="eng",
-            #     config="--oem 3 --psm 11"
-            # )
+            raw_text = pytesseract.image_to_string(
+                image,
+                lang="eng",
+                config="--oem 3 --psm 11"
+            )
 
         raw_text = raw_text.strip()
 
